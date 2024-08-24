@@ -624,8 +624,8 @@ static control_t* control_construct(control_t* control, size_t bytes)
 	control->block_null.prev_free = &control->block_null;
 
 	control->fl_bitmap = 0;
-	control->sl_bitmap = align_ptr(control + 1, sizeof(*control->sl_bitmap));
-	control->blocks = align_ptr(control->sl_bitmap + control->fl_index_count, sizeof(*control->blocks));
+	control->sl_bitmap = (unsigned int *)align_ptr(control + 1, sizeof(*control->sl_bitmap));
+	control->blocks = (block_header_t**)align_ptr(control->sl_bitmap + control->fl_index_count, sizeof(*control->blocks));
 
 
 	/* SL_INDEX_COUNT must be <= number of bits in sl_bitmap's storage type. */
@@ -683,8 +683,8 @@ static bool integrity_walker(void* ptr, size_t size, int used, void* user)
 		const size_t actual_free_block_size = used ? this_block_size : 
 													 this_block_size - offsetof(block_header_t, next_free)- block_header_overhead;
 		
-		void* ptr_block = used ? (void*)block + block_start_offset :
-								 (void*)block + sizeof(block_header_t);
+		void* ptr_block = used ? (char*)block + block_start_offset :
+								 (char*)block + sizeof(block_header_t);
 
 		tlsf_insist(tlsf_check_hook(ptr_block, actual_free_block_size, !used));
 	}
